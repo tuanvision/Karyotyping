@@ -37,7 +37,7 @@ image_with_contours = cv2.drawContours(gray, contours, -1, (0, 255, 0), 3)
 mask_contour = np.zeros(image_with_contours.shape)
 num_contour = len(contours)
 
-
+image_enhance_contour = image_with_contours
 # print(mask_countour.shape)
 # print(image_with_contours)
 
@@ -48,11 +48,13 @@ def sliding_window(image, stride, window_size):
     for y in range(0, image.shape[0], stride):
         for x in range(0, image.shape[1], stride):
             # yield the current window
-            print(x, y, x + window_size[0], y + window_size[1])
+            # print(x, y, x + window_size[0], y + window_size[1])
             # arr = np.array([x, y, x + windowSize[0], y + windowSize[1] ])
             arr_window = mask_contour[x: x + window_size[0], y: y + window_size[1]]
             num_con_window = np.count_nonzero(np.unique(arr_window))
-            print("Number contour in this window:", num_con_window)
+            # print("Number contour in this window:", num_con_window)
+            if num_con_window  <= 1:
+                image_enhance_contour[ x: x + window_size[0], y: y + window_size[1]] = 0
             # yield (x, y, image[y:y + windowSize[1], x:x + windowSize[0]])
 
 
@@ -74,7 +76,7 @@ for id, contour in enumerate(contours):
 # print(cnt)
 print(image_with_contours.shape)
 
-sliding_window(image_with_contours, 32, (20, 20))
-
-
+sliding_window(image_with_contours, 40, (70, 70))
+# show_image(image_enhance_contour, "image_enhance_contour")
+cv2.imwrite("../images/image_enhance_contour.BMP", image_enhance_contour)
 

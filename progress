@@ -1,0 +1,20 @@
+22/10:
+	Đọc phần [3.1 Preprocessing] trong "Human Metaphase Chromosome Analysis using Image Processing"
+	Tìm kiếm một số bài báo về chromosome segmentation (đặt trong \khang\document)
+23/10:
+	Thử segmentation bằng contours
+	Tìm một số heuristic để loại bỏ contour của các vật trên nền (không phải NST)
+24-10:
+	Tải phần mềm ImageJ, thử một số phương pháp trên ảnh nhưng chưa có kết quả
+25-26/10:
+	Đã thử nghiệm thành công một số heuristic để loại bỏ vật trên nền (ở 2 ảnh sample)
+	Một số contour thu được ở các NST bị dính vào nhau
+27-10:
+	Thử tăng chất lượng ảnh bằng Unsharp Masking, nhưng gây ra nhiều mảnh ở nền dẫn đến nhiều contour nhiễu
+	Nghĩ rằng sự dính vào nhau ở trên phụ thuộc vào phương pháp threshold
+	Thử một số cách threshold khác của OpenCV (adaptive, ...) ==>> FAIL
+	Tìm bài báo về chromosome thresholding
+	Đọc qua "A review of thresholding strategies applied to human chromosome segmentation" ==>> cách threshold tốt là: adaptive local threshold
+28-10:
+	Đọc "Automatic segmentation and disentangling of chromosomes in Q-band prometaphase images"
+	Thử nghiệm một số phương pháp local thresholding ==>> FAIL

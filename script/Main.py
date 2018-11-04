@@ -1,31 +1,25 @@
 import cv2
-from preprocessing import background_removal, show_image, unsharp_masking, opening_by_reconstruction, grisan_local_threshold, adaptive_otsu_threshold
 from os.path import dirname, abspath
 import numpy as np
 from matplotlib import pyplot as plt
+from skeleton import skeleton_3d, skeleton_normal
+from threshold import partial_otsu_threshold, variable_threshold
+from util import show_image
+
 
 image_dir = dirname(dirname(abspath("X"))) + "/data/"
-img = cv2.imread(image_dir + "giemsa_raw.BMP")
-# unsharp_img = unsharp_masking(filtered_img)
-# show_image(img)
-# show_image(filtered_img)
-# show_image(unsharp_img)
 
-# # unsharp_img = unsharp_masking(img)
-# # show_image(img)
-# # show_image(unsharp_img)
+for i in range(32):
+	image = cv2.imread(image_dir + "/giemsa_chromosomes/giemsa_" + str(i + 1) + ".BMP")
+	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# contours = background_removal(img)
-# image_with_contours = cv2.drawContours(img, contours, contourIdx=-1, color=(0, 0, 255), thickness=1)
-# show_image(image_with_contours)
+	thresh = partial_otsu_threshold(gray, minval=1, maxval=255, dark_background=False)
+	cv2.imwrite(image_dir + "/giemsa_chromosomes/giemsa_" + str(i + 1) + "_r1_thresh.BMP", thresh)
 
-show_image(img)
-show_image(adaptive_otsu_threshold(img))
-
-# img = cv2.imread(image_dir + "dapi_raw.BMP", 0)
-# Iobr = opening_by_reconstruction(img)
-# cv2.imwrite(image_dir + "dapi_result_2610_1010.BMP", Iobr)
-# show_image(Iobr)
+	binary = thresh.copy()
+	binary[binary == 255] = 1
+	skeleton = skeleton_3d(binary)
+	skeleton[skeleton == 1] = 255
+	cv2.imwrite(image_dir + "/giemsa_chromosomes/giemsa_" + str(i + 1) + "_r2_skeleton.BMP", skeleton)
 
 
-# cv2.imwrite(image_dir + "dapi_result_2610.BMP", image_with_contours)

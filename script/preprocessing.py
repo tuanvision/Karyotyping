@@ -1,51 +1,57 @@
 import numpy as np
 import cv2
 from skimage.morphology import reconstruction, remove_small_objects, remove_small_holes
+from os.path import dirname, abspath
+from matplotlib import pyplot as plt
+from util import show_image
 
-def background_removal(image, stride=20, window_size=(100, 100), num_contour_threshold=3, acceptance_ratio=2):
-    # convert image to grayscale
+image_dir = dirname(dirname(abspath("X"))) + "/data/"
+
+def background_removal(image, stride=20, window_size=(100, 100), num_contour_threshold=3, acceptance_ratio=2, chromosome_type=None):
+    # CONVERT IMAGE TO GRAYSCALE
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    show_image(gray, name='gray')
+    # show_image(gray, name='gray')
 
-    # use median filter to remove noise
-    gray = cv2.medianBlur(gray, 5)
+    # USE MEDIAN FILTER TO REMOVE NOISE
+    median = cv2.medianBlur(gray, 5)
+    # show_image(median)
 
-    # # normalize histogram
+    # # NORMALIZE HISTOGRAM
     # gray = histogram_equalization(gray, type="clahe")
     # show_image(gray, name="he")
 
-    # # perform unsharp masking
+    # # PERFORM UNSHARP MASKING
     # gray = unsharp_masking(gray)
     # show_image(gray, name="unsharp")
 
-    # threshold by otsu's method
-    ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # THRESHOLD BY OTSU'S METHOD
+    ret, thresh = cv2.threshold(median, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     # thresh = cv2.adaptiveThreshold(gray, maxValue=255, adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C, thresholdType=cv2.THRESH_BINARY, blockSize=11, C=2)
-    show_image(thresh, name="thresh")
+    # show_image(thresh, name="thresh")
 
-    # get contours
+    # GET CONTOURS
     img2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    image_with_contours = cv2.drawContours(gray, contours, -1, (0, 255, 0), 3)
+    # image_with_contours = cv2.drawContours(gray, contours, -1, (0, 255, 0), 3)
 
-    # mask each contour by a number (id)
+    # MASK EACH CONTOUR BY A NUMBER (ID)
     mask_contour = create_mask_contour(contours, shape=gray.shape)
 
-    # create counting dictionary of how many valid and invalid windows for each contour
+    # CREATE COUNTING DICTIONARY OF HOW MANY VALID AND INVALID WINDOWS FOR EACH CONTOUR
     num_contour = len(contours)
     valid = {contour_id: 0 for contour_id in range(1, num_contour + 1)}
     in_valid = {contour_id: 0 for contour_id in range(1, num_contour + 1)}
 
-    # slide window
+    # SLIDE WINDOW
     for y in range(0, gray.shape[0], stride):
         for x in range(0, gray.shape[1], stride):
-            # get window
+            # GET WINDOW
             arr_window = mask_contour[x: x + window_size[0], y: y + window_size[1]]
 
-            # get contours in the window 
+            # GET CONTOURS IN THE WINDOW 
             unique, counts = np.unique(arr_window, return_counts=True)         
 
-            # update 2 dictionaries 
-            # a window is valid if the number of contours in that window is greater than a threshold, else invalid.
+            # UPDATE 2 DICTIONARIES 
+            # A WINDOW IS VALID IF THE NUMBER OF CONTOURS IN THAT WINDOW IS GREATER THAN A THRESHOLD, ELSE INVALID.
             num_con_window = np.count_nonzero(unique)
             if num_con_window > num_contour_threshold :
                 for con_id in unique:
@@ -58,21 +64,30 @@ def background_removal(image, stride=20, window_size=(100, 100), num_contour_thr
                         continue
                     in_valid[con_id] = in_valid[con_id] + 1
 
-    # create list of contours to remove
-    # a contour will be removed if #valid/#invalid is lower than a ratio
+    # CREATE A LIST OF CONTOURS TO REMOVE
+    # A CONTOUR WILL BE REMOVED IF #VALID/#INVALID IS LOWER THAN A RATIO
     chosen_contours = list()
     for i in range(1, num_contour + 1):
         if valid[i] * acceptance_ratio >= in_valid[i]:
             chosen_contours.append(contours[i - 1])
 
-    # remove contours that is much different to the rest
+    # REMOVE CONTOURS THAT IS MUCH DIFFERENT TO THE REST
     chosen_contours = remove_abnormal_contours(chosen_contours)
 
-    # draw removed contours
+    # DRAW REMOVED CONTOURS
     white_image = 255 - np.zeros_like(gray)
-    image_with_chosen_contours = cv2.drawContours(white_image, chosen_contours, contourIdx=-1, color=2, thickness=1)
-    show_image(image_with_chosen_contours, name="contours")
-    return chosen_contours
+    image_with_chosen_contours = cv2.drawContours(white_image, chosen_contours, contourIdx=-1, color=(0,0,255), thickness=1)
+    # show_image(image_with_chosen_contours, name="contours")
+
+    # GET THE IMAGE WITH CONTOURS AS COMPONENTS
+    labels = np.zeros_like(gray) # dark image
+    ret = 1
+    for contour in chosen_contours:
+        labels = cv2.drawContours(labels, [contour], contourIdx=-1, color=(ret, ret, ret), thickness=cv2.FILLED)
+        ret += 1
+    component_list(gray, ret, labels, chromosome_type=chromosome_type)
+
+    return chosen_contours, ret, labels
 
 
 def create_mask_contour(contours, shape):
@@ -99,13 +114,6 @@ def unsharp_masking(image, radius=5, mask_weight=10):
 #                                   [-1,-1,-1]])
 #     sharpened = cv2.filter2D(image, -1, kernel_sharpening)
 #     return sharpened
-
-
-def show_image(image, name='image'):
-    cv2.imshow(name,image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
 
 '''
 This function is to remove contours that is too large or too small compared to the rest.
@@ -145,7 +153,9 @@ def watershed(image, contours):
     show_image(image)
     return image
 
-# Opening-by-reconstruction = Erosion + Morphological reconstruction
+'''
+    Opening-by-reconstruction = Erosion + Morphological reconstruction
+'''
 def opening_by_reconstruction(image):
     # Erosion
     se = cv2.getStructuringElement(cv2.MORPH_ERODE, (20, 20)) # structure element
@@ -168,39 +178,48 @@ def histogram_equalization(image, type="clahe"):
 
     return None
 
-# reference:  Automatic segmentation and disentangling of chromosomes in Q-band prometaphase images
-def grisan_local_threshold(image, grid_size=350):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+def component_list(gray, ret, labels, component_size=200, chromosome_type=None):
+    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    # ret, labels, points, area = connected_component_with_stats(binary)
     height, width = gray.shape
-    matrix_height = int(height/grid_size)
-    matrix_width = int(width/grid_size)
-    matrix_threshold = [[get_grid_threshold_value(gray, i, j, grid_size) for j in range(matrix_width)] for i in range(matrix_height)]
-    matrix_threshold = np.asarray(matrix_threshold)
-    gray_threshold = cv2.resize(matrix_threshold, (width, height), interpolation=cv2.INTER_LINEAR)
-    threshold = np.zeros_like(gray)
-    threshold[gray > gray_threshold] = 255
-    threshold[gray <= gray_threshold] = 0
-    return threshold
+    ret, labels, points, area = connected_component_with_stats(ret, labels)
 
-# reference: https://dsp.stackexchange.com/questions/2411/what-are-the-most-common-algorithms-for-adaptive-thresholding
-def adaptive_otsu_threshold(image, grid_size=10):
-    
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    threshold = np.zeros_like(gray)
-    height, width = gray.shape    
-    h_upper_bound = int(height/grid_size)
-    w_upper_bound = int(width/grid_size)
-    for i in range(h_upper_bound):
-        for j in range(w_upper_bound):
-            threshold[max(0, i - 1) * grid_size : i * grid_size][max(0, j - 1) * grid_size : j * grid_size] = get_grid_threshold(gray, i, j, grid_size)
-    return threshold
+    for label in range(1, ret):
+        # can replace by bounding rectangle
+        x_points = [x for (x, y) in points[label]]
+        y_points = [y for (x, y) in points[label]]
+        x_min, x_max, y_min, y_max = min(x_points), max(x_points), min(y_points), max(y_points)
 
-def get_grid_threshold_value(gray, i, j, grid_size):
-    sub_gray = gray[max(0, i - 1) * grid_size : i * grid_size][max(0, j - 1) * grid_size : j * grid_size]
-    ret, thresh = cv2.threshold(sub_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    return ret
+        white_image = 255 - np.zeros_like(gray)
+        white_image[labels == label] = gray[labels == label]
+        left_x = int((x_max + x_min - component_size) / 2)
+        right_x = int((x_max + x_min + component_size) / 2)
+        left_y = int((y_max + y_min - component_size) / 2)
+        right_y = int((y_max + y_min + component_size) / 2)
+        if (left_x >= 0 and right_x < height and left_y >= 0 and right_y < width):
+            chromosome_image = sub_matrix(white_image, left_x, right_x, left_y, right_y)
+            if chromosome_type is not None:
+                path = image_dir + chromosome_type + '_chromosomes/' + chromosome_type + '_' + str(label) + '.BMP'
+                print("Writing to " + path)
+                cv2.imwrite(path, chromosome_image)
+            # show_image(chromosome_image)
 
-def get_grid_threshold(gray, i, j, grid_size):
-    sub_gray = gray[max(0, i - 1) * grid_size : i * grid_size][max(0, j - 1) * grid_size : j * grid_size]
-    ret, thresh = cv2.threshold(sub_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    return thresh
+def connected_component_with_stats(ret, labels):    
+    # ret, labels = cv2.connectedComponents(binary)
+    points = dict()
+    area = dict()
+    for i in range(0, ret):
+        points[i] = list()
+        area[i] = 0
+    height, width = labels.shape
+    for i in range(height):
+        for j in range(width):
+            points[labels[i][j]].append((i, j))
+            area[labels[i][j]] += 1
+
+    return ret, labels, points, area
+
+def sub_matrix(matrix, left_x, right_x, left_y, right_y):
+    return matrix[np.ix_(range(left_x, right_x + 1), range(left_y, right_y + 1))]

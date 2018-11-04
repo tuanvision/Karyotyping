@@ -18,3 +18,23 @@
 28-10:
 	Đọc "Automatic segmentation and disentangling of chromosomes in Q-band prometaphase images"
 	Thử nghiệm một số phương pháp local thresholding ==>> FAIL
+29-10:
+	10:30 -> 11:30: Đọc chương 10.3 (Image Thresholding) trong Digital Image Processing
+	12:00 -> 15:30: 
+		Thử cải tiến thresholding bằng cạnh (section 10.3.5), nhưng siêu tham số đúng (edge image thresold value) lại khác nhau với hai ảnh sample ==>> FAIL
+		SUCCESSED: Biến contour thành cách thành phần liên thông, tách ảnh từng contours
+	16:00 -> 18:00: Seminar
+		Vấn đề: tách những chromosome dính vào nhau		
+		Bài về nhà: Cho một ảnh, xác định nó có phải là chromosome hay không?
+		Phương án dự tính: Xác định các tính chất của một ảnh chromosome (xương, tâm, độ dài, ...) trên ảnh đó, rồi dựa vào số liệu (+ heuristic) để phân biệt
+30-10:
+	12:45 -> 14:00
+		Đọc chương 3.3 về tìm tâm trong "Human Metaphase Chromosome Analysis using Image Processing" ==>> [FAIL]
+		Thử skeletonize của skimage, dùng adaptive threshold 
+			
+31-10:
+	Cả ngày:
+		Đọc về Skeletion Prunining with Contour Partioning by DCE
+
+01-11:
+	https://imagej.net/Auto_Local_Threshold#Contrast

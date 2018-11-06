@@ -13,6 +13,7 @@ for i in range(32):
 	image = cv2.imread(image_dir + "/giemsa_chromosomes/giemsa_" + str(i + 1) + ".BMP")
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
+	# ret, thresh = cv2.threshold(gray, np.amin(gray) + 40, 255, cv2.THRESH_BINARY_INV)
 	thresh = partial_otsu_threshold(gray, minval=1, maxval=255, dark_background=False)
 	cv2.imwrite(image_dir + "/giemsa_chromosomes/giemsa_" + str(i + 1) + "_r1_thresh.BMP", thresh)
 

@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from skimage.morphology import medial_axis
 from preprocessing import show_image
 from skimage.morphology import skeletonize, skeletonize_3d, thin
-from util import show_image, show_contour_image
+from util import show_image, show_contour_image, isclose
 
 
 def skeleton_normal(binary):
@@ -109,6 +109,7 @@ def discrete_curve_evolution(contour, binary=None, num_iter=1000):
     polygon = contour
 
     for i in range(num_iter):
+    	print(i)
         # minimum relevance value 
         min_value = 1e9
 
@@ -150,7 +151,7 @@ def discrete_curve_evolution(contour, binary=None, num_iter=1000):
 
         if (binary is not None) and ((i + 1) % 50 == 0 or len(polygon) < 15):
         	polygon = np.asarray(polygon)
-        	show_contour_image(polygon, binary.shape)
+        	show_contour_image([polygon], binary.shape)
         	continue
 
         polygon = np.asarray(polygon)
@@ -217,3 +218,13 @@ def test_skeleton():
 	square[1, 2] = square[1, -3] = square[-2, 2] = square[-2, -3] = 0
 	print(square)
 	discrete_curve_evolution(square)
+
+
+# image_dir = dirname(dirname(abspath("X"))) + "/data/"	
+# gray = cv2.imread(image_dir + "fish.PNG", 0)
+# show_image(gray)
+# ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+# show_image(thresh)
+# _, contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+# show_contour_image([contours[0]], gray.shape)
+# print(discrete_curve_evolution(contours[0], gray))

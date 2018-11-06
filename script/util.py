@@ -5,15 +5,20 @@ from os.path import dirname, abspath
 from matplotlib import pyplot as plt
 import json
 
-matplotlib.use('TkAgg')
-
 
 def match_shape(gray1, gray2):
 	hu_moment_1 = cv2.HuMoments(cv2.moments(gray1)).flatten()
 	hu_moment_2 = cv2.HuMoments(cv2.moments(gray2)).flatten()
+	# print(hu_moment_1)
+	# print(hu_moment_2)
+	# m_1 = np.sign(hu_moment_1) * np.log(hu_moment_1)
+	# m_2 = np.sign(hu_moment_2) * np.log(hu_moment_2)
 	matching_value = np.sum(np.abs(hu_moment_1 - hu_moment_2))
 	return matching_value
 
+# to use SIFT, using opencv 3.4.2
+# pip install opencv-python=3.4.2
+# pip install opencv_contrib-python=3.4.2
 def sift_matching(gray1, gray2):
 	sift = cv2.xfeatures2d.SIFT_create()
 	
@@ -22,13 +27,15 @@ def sift_matching(gray1, gray2):
 
 	bf = cv2.BFMatcher()
 	matches = bf.knnMatch(des1, des2, k=2)
+	print(kp1)
+	print(kp2)
 
 	good = []
 	for m,n in matches:
-	    if m.distance < 0.75 * n.distance:
+	    if m.distance < 0.90 * n.distance:
 	        good.append([m])
 	
-	matching_image = cv2.drawMatchesKnn(gray1, kp1, gray2, kp2, good, flags=2)
+	matching_image = cv2.drawMatchesKnn(gray1, kp1, gray2, kp2, good, gray2.copy(), flags=2)
 	show_image(matching_image)
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):

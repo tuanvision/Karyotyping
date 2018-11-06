@@ -53,21 +53,25 @@ def is_chromosome(gray, threshold=0):
 
     for name in chromosome_name:
     	database_skeleton = cv2.imread(image_dir + "/chromosome_basic/chromosome_" + name + "_skeleton.PNG", 0)
-    	show_image(database_skeleton)
+    	# show_image(database_skeleton)
     	matching_value = match_shape(skeleton, database_skeleton)
     	print("Matching " + name + " : " + str(matching_value))
 
     return True
 
-# is_chromosome(cv2.imread(image_dir + "house.jpg", 0))
+# gray = cv2.imread(image_dir + "horse.jpg", 0)
+gray = cv2.imread(image_dir + "/giemsa_chromosomes/giemsa_19.BMP", 0)
+# gray = cv2.imread(image_dir + "/chromosome_basic/chromosome_1.PNG", 0)
+is_chromosome(gray)
 
-gray1 = cv2.imread(image_dir + "fish.PNG", 0)
-thresh = partial_otsu_threshold(gray1, minval=1, maxval=255, dark_background=False)
-binary = thresh.copy()
-binary[binary == 255] = 1
-skeleton = skeleton_3d(binary)
-skeleton[skeleton == 1] = 255
-gray1 = skeleton.copy()
+# gray1 = cv2.imread(image_dir + "/giemsa_chromosomes/giemsa_4_r1_thresh.BMP", 0)
+# # thresh = partial_otsu_threshold(gray1, minval=1, maxval=255, dark_background=False)
+# # binary = thresh.copy()
+# # binary[binary == 255] = 1
+# # skeleton = skeleton_3d(binary)
+# # skeleton[skeleton == 1] = 255
+# # gray1 = skeleton.copy()
 
-gray2 = cv2.imread(image_dir + "/chromosome_basic/chromosome_1_skeleton.PNG", 0)
-sift_matching(gray1, gray2)
+# # gray2 = cv2.imread(image_dir + "/giemsa_chromosomes/giemsa_2_r1_thresh.BMP", 0)
+# gray2 = cv2.imread(image_dir + "/chromosome_basic/chromosome_1_thresh.PNG", 0)
+# sift_matching(gray1, gray2)
